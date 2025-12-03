@@ -7,14 +7,10 @@ A React development overlay that shows component information and allows you to c
 ## Features
 
 - **Component Inspection** - Hover over elements to see component names, tags, classes, file paths, text content, and child counts
-- **Cursor AI Integration** - Click on elements to create structured prompts and send them directly to Cursor chat via deeplinks
-- **Compose Mode** - Add custom messages to your prompts before sending to Cursor
+- **Cursor Compose Mode** - Click on elements to create structured prompts and send them directly to Cursor chat via deeplinks
 - **Element Scope Selection** - Choose to apply changes to "only this element" or "all similar elements"
 - **Open in Editor** - Click file paths to open source files in Cursor or VS Code at specific lines
 - **Keyboard Shortcuts** - Hold `Alt` to show overlay, release to hide. Press `Escape` to close
-- **Lock Mode** - When composing a prompt, selection is locked so you don't need to hold Alt
-- **Self-Contained Styles** - Includes all CSS, no external dependencies
-- **Zero Config** - Works out of the box, only shows in development
 
 ## Future Plans
 
