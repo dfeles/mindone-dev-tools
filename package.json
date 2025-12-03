@@ -1,6 +1,6 @@
 {
   "name": "mindone",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A React dev overlay that shows component info and opens files in your editor (Cursor/VS Code) - Press Alt to toggle",
   "main": "dist/mindone.umd.js",
   "module": "dist/mindone.es.js",
@@ -16,8 +16,7 @@
     "dist",
     "src/index.d.ts",
     "README.md",
-    "LICENSE",
-    "makeItPop.gif"
+    "LICENSE"
   ],
   "scripts": {
     "sync-css": "node scripts/sync-css.mjs",

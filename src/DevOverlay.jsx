@@ -56,6 +56,31 @@ function DevOverlay({
     return className.split(' ').filter(cls => cls !== 'mindone-highlighted').join(' ').trim() || ''
   }
   
+  // Helper function to get first 2 words from an element's text content
+  const getFirstTwoWords = (element) => {
+    if (!element) return ''
+    const textContent = element.textContent?.trim() || ''
+    const words = textContent.split(/\s+/).filter(w => w.length > 0)
+    return words.slice(0, 2).join(' ') || ''
+  }
+  
+  // Helper function to format content when there are child elements
+  const formatContentForElements = (element, childCount) => {
+    if (!element || !element.children || element.children.length === 0) return null
+    
+    const childWords = Array.from(element.children)
+      .slice(0, childCount)
+      .map(child => {
+        const words = getFirstTwoWords(child)
+        return words ? `[${words}]` : ''
+      })
+      .filter(words => words.length > 0)
+    
+    if (childWords.length === 0) return null
+    
+    return `${childCount} ${childCount === 1 ? 'element' : 'elements'}: ${childWords.join(' ')}`.trim()
+  }
+  
   // Keep ref in sync with state
   useEffect(() => {
     isOpenRef.current = isOpen
@@ -483,8 +508,18 @@ function DevOverlay({
     // Determine content to display
     let contentValue
     if (hoveredElement.childCount > 0) {
-      // If element has children, show element count
-      contentValue = `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`
+      // Show first 2 words of each child element with brackets
+      if (hoveredElement.element) {
+        const formatted = formatContentForElements(hoveredElement.element, hoveredElement.childCount)
+        if (formatted) {
+          contentValue = formatted
+        } else {
+          contentValue = `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`
+        }
+      } else {
+        // If element has children, show element count
+        contentValue = `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`
+      }
     } else if (hoveredElement.textContent && hoveredElement.textContent.trim()) {
       // Only show text content if there are no child elements
       contentValue = hoveredElement.textContent
@@ -736,7 +771,9 @@ function DevOverlay({
               {(hoveredElement.textContent || hoveredElement.childCount > 0) && (
                 <span className="mindone-title-content">
                   {hoveredElement.childCount > 0 
-                    ? `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`
+                    ? (hoveredElement.element
+                        ? (formatContentForElements(hoveredElement.element, hoveredElement.childCount) || `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`)
+                        : `${hoveredElement.childCount} ${hoveredElement.childCount === 1 ? 'element' : 'elements'}`)
                     : hoveredElement.textContent
                   }
                 </span>
