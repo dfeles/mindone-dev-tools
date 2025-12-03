@@ -2,7 +2,7 @@
 
 A React development overlay that shows component information and allows you to create prompts for Cursor AI or open files directly in your editor (Cursor/VS Code). Hold **Alt** to show, release to hide.
 
-<img src="https://github.com/dfeles/mindone-dev-tools/raw/main/makeItPop.gif" alt="mindone demo" width="400" />
+<img src="https://github.com/dfeles/mindone-dev-tools/raw/main/makeItPop.gif" alt="mindone demo" width="520" />
 
 ## Features
 
