@@ -1,26 +1,28 @@
 {
   "name": "mindone",
-  "version": "1.0.5",
+  "version": "1.0.9",
   "description": "A React dev overlay that shows component info and opens files in your editor (Cursor/VS Code) - Press Alt to toggle",
-  "main": "src/index.jsx",
-  "module": "src/index.jsx",
+  "main": "dist/mindone.umd.js",
+  "module": "dist/mindone.es.js",
   "types": "src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.jsx",
-      "require": "./src/index.jsx",
-      "types": "./src/index.d.ts"
-    },
-    "./style": "./src/DevOverlay.css"
+      "types": "./src/index.d.ts",
+      "import": "./dist/mindone.es.js",
+      "require": "./dist/mindone.umd.js"
+    }
   },
   "files": [
-    "src",
+    "dist",
+    "src/index.d.ts",
     "README.md",
     "LICENSE",
     "makeItPop.gif"
   ],
-  "style": "src/DevOverlay.css",
   "scripts": {
+    "sync-css": "node scripts/sync-css.mjs",
+    "prebuild": "npm run sync-css",
+    "build": "vite build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -45,5 +47,9 @@
   "bugs": {
     "url": "https://github.com/dfeles/mindone-dev-tools/issues"
   },
-  "homepage": "https://github.com/dfeles/mindone-dev-tools#readme"
+  "homepage": "https://github.com/dfeles/mindone-dev-tools#readme",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.2.6"
+  }
 }

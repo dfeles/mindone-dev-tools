@@ -75,28 +75,6 @@ function App() {
 ## Requirements
 
 - React 16.8+ (uses hooks)
-- No additional dependencies required - includes all CSS
-
-## Bundler Compatibility
-
-- **Vite, Next.js, Parcel, etc.** - Works out of the box, no configuration needed
-- **Create React App** - Requires adding mindone to your webpack transpilation includes. If using `craco`, add this to your `craco.config.js`:
-
-```js
-// In craco.config.js webpack.configure function:
-const babelLoaderRule = webpackConfig.module.rules
-  .find(rule => rule.oneOf)?.oneOf
-  .find(rule => rule.test?.toString().includes('jsx'));
-
-if (babelLoaderRule) {
-  const mindonePath = path.resolve(__dirname, 'node_modules/mindone/src');
-  if (Array.isArray(babelLoaderRule.include)) {
-    babelLoaderRule.include.push(mindonePath);
-  } else {
-    babelLoaderRule.include = [babelLoaderRule.include, mindonePath];
-  }
-}
-```
 
 ## How It Works
 
@@ -109,14 +87,6 @@ if (babelLoaderRule) {
 7. **Press Escape** - Closes the overlay or exits compose mode
 
 The overlay automatically detects if you're in production and won't render. When in compose mode, the selection is locked so you don't need to keep holding Alt.
-
-## Editor Protocol
-
-The component uses URL schemes to interact with editors:
-- **File Opening**: `cursor://file/path/to/file.jsx:10` for Cursor, `vscode://file/path/to/file.jsx:10` for VS Code
-- **Cursor AI Prompts**: `cursor://anysphere.cursor-deeplink/prompt?text=...` for sending structured prompts to Cursor chat
-
-If you set `editorProtocol="cursor"`, it will try `cursor://` first, then fall back to `vscode://` if that doesn't work (since Cursor is VS Code-based and supports both).
 
 ## Prompt Generation
 

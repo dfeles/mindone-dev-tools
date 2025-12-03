@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import './DevOverlay.css'
 
 // Simple icon components
 const XIcon = ({ size = 14 }) => (
