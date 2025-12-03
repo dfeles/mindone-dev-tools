@@ -1,0 +1,45 @@
+{
+  "name": "mindone",
+  "version": "1.0.4",
+  "description": "A React dev overlay that shows component info and opens files in your editor (Cursor/VS Code) - Press Alt to toggle",
+  "main": "src/index.jsx",
+  "module": "src/index.jsx",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.jsx",
+      "require": "./src/index.jsx",
+      "types": "./src/index.d.ts"
+    },
+    "./style": "./src/DevOverlay.css"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE",
+    "makeItPop.gif"
+  ],
+  "style": "src/DevOverlay.css",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "devtools",
+    "overlay",
+    "debug",
+    "development",
+    "cursor",
+    "vscode",
+    "editor"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}

@@ -1,0 +1,265 @@
+.mindone-overlay {
+  position: fixed;
+  z-index: 9999;
+  background-color: rgb(15, 23, 42);
+  color: white;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(55, 65, 81, 1);
+  max-width: 384px;
+}
+
+.mindone-overlay.top-right {
+  top: 16px;
+  right: 16px;
+}
+
+.mindone-overlay.top-left {
+  top: 16px;
+  left: 16px;
+}
+
+.mindone-overlay.bottom-right {
+  bottom: 16px;
+  right: 16px;
+}
+
+.mindone-overlay.bottom-left {
+  bottom: 16px;
+  left: 16px;
+}
+
+.mindone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+.mindone-title {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.mindone-title-compact {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  font-size: 11px;
+  line-height: 1.4;
+  min-width: 0;
+  gap: 8px;
+}
+
+.mindone-title-content {
+  font-weight: 700;
+  color: white;
+}
+
+.mindone-title-component {
+  color: rgba(96, 165, 250, 1);
+}
+
+.mindone-title-classes {
+  color: rgba(250, 204, 21, 1);
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.mindone-close {
+  color: rgba(156, 163, 175, 1);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.mindone-close:hover {
+  color: white;
+}
+
+.mindone-file-section-compact {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(55, 65, 81, 1);
+}
+
+.mindone-file-link {
+  color: rgba(103, 232, 249, 1);
+  word-break: break-all;
+  cursor: pointer;
+  font-size: 10px;
+  text-decoration: underline;
+  text-decoration-color: rgba(103, 232, 249, 0.5);
+  transition: text-decoration-color 0.2s;
+}
+
+.mindone-file-link:hover {
+  text-decoration-color: rgba(103, 232, 249, 1);
+}
+
+/* Highlight for hovered elements */
+.mindone-highlighted {
+  outline: 2px solid rgba(96, 165, 250, 0.8) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.2) !important;
+  position: relative;
+  z-index: 9998;
+}
+
+/* Ensure highlight is visible even on elements with existing outlines */
+.mindone-highlighted * {
+  outline: none !important;
+}
+
+/* Selection label */
+.mindone-selection-label {
+  position: fixed;
+  z-index: 9999;
+  background-color: rgba(96, 165, 250, 0.9);
+  color: white;
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  padding: 6px 12px;
+  border-radius: 0 0 3px 3px;
+  white-space: nowrap;
+  pointer-events: auto;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mindone-label-text {
+  display: flex;
+  align-items: center;
+}
+
+/* Invisible bridge to prevent losing selection when moving mouse to label */
+.mindone-selection-label::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 100%;
+  height: 10px;
+}
+
+.mindone-label-classes {
+  opacity: 0.85;
+  margin-left: 8px;
+}
+
+.mindone-label-chat-button {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mindone-label-chat-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.mindone-label-chat-button:active {
+  transform: scale(0.95);
+}
+
+.mindone-label-chat-button.copied {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+}
+
+.mindone-label-chat-button.copied:hover {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: rgba(34, 197, 94, 0.5);
+  transform: none;
+}
+
+/* Cursor pointer when Alt is down and element is selected */
+body.mindone-cursor-pointer {
+  cursor: pointer !important;
+}
+
+body.mindone-cursor-pointer * {
+  cursor: pointer !important;
+}
+
+/* Scope dropdown */
+.mindone-scope-dropdown-button {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  font-size: 11px;
+  color: white;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.mindone-scope-dropdown-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.mindone-scope-dropdown-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 4px;
+  background: rgba(51, 65, 85, 1);
+  border: 1px solid rgba(75, 85, 99, 1);
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+  z-index: 10000;
+  overflow: hidden;
+}
+
+.mindone-scope-dropdown-item {
+  all: unset;
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  text-align: left;
+}
+
+.mindone-scope-dropdown-item:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.mindone-scope-dropdown-item.active {
+  background: rgba(96, 165, 250, 0.3);
+  font-weight: 500;
+}
+
+.mindone-scope-dropdown-item:not(:last-child) {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.5);
+}
+
