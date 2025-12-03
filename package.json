@@ -1,6 +1,6 @@
 {
   "name": "mindone",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A React dev overlay that shows component info and opens files in your editor (Cursor/VS Code) - Press Alt to toggle",
   "main": "src/index.jsx",
   "module": "src/index.jsx",
@@ -40,6 +40,10 @@
   },
   "repository": {
     "type": "git",
-    "url": ""
-  }
+    "url": "git+https://github.com/dfeles/mindone-dev-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dfeles/mindone-dev-tools/issues"
+  },
+  "homepage": "https://github.com/dfeles/mindone-dev-tools#readme"
 }
