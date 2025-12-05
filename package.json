@@ -1,6 +1,6 @@
 {
   "name": "mindone",
-  "version": "1.0.10",
+  "version": "1.0.12",
   "description": "A React dev overlay that shows component info and opens files in your editor (Cursor/VS Code) - Press Alt to toggle",
   "main": "dist/mindone.umd.js",
   "module": "dist/mindone.es.js",

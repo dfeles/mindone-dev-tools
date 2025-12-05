@@ -1,6 +1,8 @@
 # mindone
 
-A React development overlay that shows component information and allows you to create prompts for Cursor AI or open files directly in your editor (Cursor/VS Code). Hold **Alt** to show, release to hide.
+A React development overlay that shows component information and allows you to create prompts for Cursor AI or open files directly in your editor (Cursor/VS Code). Hold **Alt** to show, release to hide. With agent mode enabled, you can run agents in the background to automatically execute your prompts.
+
+<img src="https://github.com/dfeles/mindone-dev-tools/raw/main/makeItPop.gif" alt="mindone demo" width="520" />
 
 ## Quick Start
 
@@ -12,8 +14,9 @@ npm install mindone
 npm run setup-check
 
 # 3. Authenticate with Cursor (one-time)
-export CURSOR_API_KEY=your_api_key
-# Or: cursor agent login
+cursor agent login
+# Or: export CURSOR_API_KEY=your_api_key
+#     (Get API key from: Cursor Dashboard > Integrations > User API Keys)
 
 # 4. Start agent server (in a separate terminal)
 npm run agent-server
@@ -23,7 +26,6 @@ import { DevOverlay } from 'mindone'
 <DevOverlay agentMode={true} />
 ```
 
-<img src="https://github.com/dfeles/mindone-dev-tools/raw/main/makeItPop.gif" alt="mindone demo" width="520" />
 
 ## Features
 
@@ -147,8 +149,9 @@ export default function RootLayout({ children }) {
 
 1. **Authenticate with Cursor** (one-time):
    ```bash
-   export CURSOR_API_KEY=your_api_key
-   # Or: cursor agent login
+   cursor agent login
+   # Or: export CURSOR_API_KEY=your_api_key
+   #     (Get API key from: Cursor Dashboard > Integrations > User API Keys)
    ```
 
 2. **Start server manually**:
