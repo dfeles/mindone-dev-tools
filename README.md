@@ -2,6 +2,27 @@
 
 A React development overlay that shows component information and allows you to create prompts for Cursor AI or open files directly in your editor (Cursor/VS Code). Hold **Alt** to show, release to hide.
 
+## Quick Start
+
+```bash
+# 1. Install
+npm install mindone
+
+# 2. Check setup (optional - runs automatically after install)
+npm run setup-check
+
+# 3. Authenticate with Cursor (one-time)
+export CURSOR_API_KEY=your_api_key
+# Or: cursor agent login
+
+# 4. Start agent server (in a separate terminal)
+npm run agent-server
+
+# 5. Use in your app
+import { DevOverlay } from 'mindone'
+<DevOverlay agentMode={true} />
+```
+
 <img src="https://github.com/dfeles/mindone-dev-tools/raw/main/makeItPop.gif" alt="mindone demo" width="520" />
 
 ## Features
@@ -63,6 +84,106 @@ function App() {
 }
 ```
 
+### Agent Mode (Automatic Agent Execution)
+
+Mindone can automatically execute agents instead of just opening prompts. This enables a workflow where you select a UI element and the agent automatically runs to make changes.
+
+**Setup:**
+
+### Automatic Server Setup (Recommended)
+
+The server can start automatically with your dev command:
+
+**Add to your `package.json`:**
+```json
+{
+  "scripts": {
+    "dev": "npx mindone-agent-server@latest && npm run dev"
+  }
+}
+```
+
+Or with other commands:
+```json
+{
+  "scripts": {
+    "dev": "npx mindone-agent-server@latest && next dev",
+    "start": "npx mindone-agent-server@latest && vite"
+  }
+}
+```
+
+The `&&` runs your dev command after the server starts.
+
+### Client Setup
+
+**Option A: Using Script tags** (any framework):
+```html
+<script src="//unpkg.com/mindone/dist/client-agent.global.js"></script>
+```
+
+**Option B: Using Next.js Script component:**
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/mindone/dist/client-agent.global.js"
+            strategy="lazyOnload"
+          />
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### Manual Setup (Alternative)
+
+1. **Authenticate with Cursor** (one-time):
+   ```bash
+   export CURSOR_API_KEY=your_api_key
+   # Or: cursor agent login
+   ```
+
+2. **Start server manually**:
+   ```bash
+   npm run agent-server
+   ```
+
+3. **Enable agent mode** in your component:
+   ```jsx
+   import { DevOverlay } from 'mindone'
+
+   function App() {
+     return (
+       <>
+         <DevOverlay 
+           agentMode={true}
+           agentServerUrl="http://localhost:5567"
+           workspacePath="/path/to/your/project"
+         />
+         {/* Your app content */}
+       </>
+     )
+   }
+   ```
+
+**How it works:**
+- When `agentMode={true}`, mindone sends prompts to a local HTTP server instead of using deeplinks
+- The server executes the agent CLI (e.g., `cursor-agent`) with your prompt
+- The agent runs automatically - no need to manually copy/paste or open Cursor chat
+- If the agent server is unavailable, it automatically falls back to deeplink mode
+
+**Environment variables:**
+- `MINDONE_AGENT_PORT` - Port for the agent server (default: 5567)
+- `MINDONE_AGENT_TYPE` - Agent type: 'cursor', 'claude', etc. (default: 'cursor')
+
 ## Props
 
 | Prop | Type | Default | Description |
@@ -71,6 +192,8 @@ function App() {
 | `workspacePath` | `string` | `null` | Workspace path for fallback file opening |
 | `showOnAlt` | `boolean` | `true` | Whether to show overlay on Alt key press |
 | `position` | `'top-right' \| 'top-left' \| 'bottom-right' \| 'bottom-left'` | `'bottom-left'` | Position of the overlay |
+| `agentMode` | `boolean` | `false` | If true, sends prompts to agent server instead of deeplink |
+| `agentServerUrl` | `string` | `'http://localhost:5567'` | URL of the agent server |
 
 ## Requirements
 
@@ -96,7 +219,9 @@ When you click on an element and compose a prompt, mindone generates a structure
 - CSS classes (if any)
 - Text content or element count
 
-You can add a custom message at the beginning of the prompt, and choose whether to apply changes to only the selected element or all similar elements. The prompt is sent directly to Cursor chat via deeplink.
+You can add a custom message at the beginning of the prompt, and choose whether to apply changes to only the selected element or all similar elements. 
+
+**By default**, the prompt is sent directly to Cursor chat via deeplink. With **agent mode** enabled, the prompt is sent to a local server that automatically executes the agent CLI, enabling fully automated agent workflows.
 
 ## License
 

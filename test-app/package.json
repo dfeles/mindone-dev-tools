@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:agent": "npm run agent-server & vite",
+    "agent-server": "node ../scripts/agent-server.js",
     "build": "vite build",
     "preview": "vite preview"
   },

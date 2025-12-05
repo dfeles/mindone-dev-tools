@@ -14,18 +14,20 @@ header {
 }
 
 header h1 {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 0.5rem 0;
   color: #e0e0e0;
-  font-size: 3rem;
+  font-size: 1.5rem;
   font-weight: 600;
   letter-spacing: -0.0em;
+  line-height: 1.2;
 }
 
 header p {
   margin: 0;
   color: #b0b0b0;
-  font-size: 1.125rem;
+  font-size: 0.75rem;
   font-family: monospace;
+  line-height: 1.3;
 }
 
 main {
@@ -86,6 +88,12 @@ input[type="text"] {
 input[type="text"]:focus {
   outline: none;
   border-color: #007bff;
+}
+
+.small-checkbox {
+  width: 14px;
+  height: 14px;
+  transform: scale(0.8);
 }
 
 ul {
@@ -163,6 +171,94 @@ footer p {
   75% {
     background-position: 50% 50%;
     filter: hue-rotate(270deg) brightness(1.3);
+  }
+}
+
+.rainbow-count {
+  display: inline-block;
+  background: linear-gradient(
+    90deg,
+    #ff006e 0%,
+    #8338ec 20%,
+    #3a86ff 40%,
+    #06ffa5 60%,
+    #ffbe0b 80%,
+    #ff006e 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holographic-shift-count 3s ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(131, 56, 236, 0.5),
+               0 0 20px rgba(58, 134, 255, 0.3),
+               0 0 30px rgba(6, 255, 165, 0.2);
+  position: relative;
+  filter: brightness(1.2);
+  font-weight: 600;
+  font-size: 2rem;
+}
+
+@keyframes holographic-shift-count {
+  0%, 100% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg) brightness(1.2);
+  }
+  25% {
+    background-position: 50% 50%;
+    filter: hue-rotate(90deg) brightness(1.3);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: hue-rotate(180deg) brightness(1.4);
+  }
+  75% {
+    background-position: 50% 50%;
+    filter: hue-rotate(270deg) brightness(1.3);
+  }
+}
+
+.alt-key {
+  display: inline-block;
+  font-weight: 700;
+  background: linear-gradient(
+    90deg,
+    #ff006e 0%,
+    #8338ec 20%,
+    #3a86ff 40%,
+    #06ffa5 60%,
+    #ffbe0b 80%,
+    #ff006e 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: holographic-shift-alt 3s ease-in-out infinite;
+  text-shadow: 0 0 15px rgba(131, 56, 236, 0.6),
+               0 0 30px rgba(58, 134, 255, 0.4),
+               0 0 45px rgba(6, 255, 165, 0.3);
+  position: relative;
+  filter: brightness(1.3);
+  transform: translateZ(0);
+}
+
+@keyframes holographic-shift-alt {
+  0%, 100% {
+    background-position: 0% 50%;
+    filter: hue-rotate(0deg) brightness(1.3);
+  }
+  25% {
+    background-position: 50% 50%;
+    filter: hue-rotate(90deg) brightness(1.4);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: hue-rotate(180deg) brightness(1.5);
+  }
+  75% {
+    background-position: 50% 50%;
+    filter: hue-rotate(270deg) brightness(1.4);
   }
 }
 

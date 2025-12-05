@@ -31,7 +31,9 @@ function DevOverlay({
   editorProtocol = 'cursor', // 'cursor' or 'vscode'
   workspacePath = null,
   showOnAlt = true,
-  position = 'bottom-left' // 'top-right', 'top-left', 'bottom-right', 'bottom-left'
+  position = 'bottom-left', // 'top-right', 'top-left', 'bottom-right', 'bottom-left'
+  agentMode = false, // If true, sends to agent server instead of deeplink
+  agentServerUrl = 'http://localhost:5567' // URL of the agent server
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [hoveredElement, setHoveredElement] = useState(null)
@@ -44,6 +46,9 @@ function DevOverlay({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false) // Whether the dropdown is open
   const [isLocked, setIsLocked] = useState(false) // Whether selection is locked (no need to hold Alt)
   const [isMessageHovered, setIsMessageHovered] = useState(false) // Whether the message icon is hovered
+  const [agentStatus, setAgentStatus] = useState(null) // Agent execution status: { message, type, detail }
+  const [isAgentRunning, setIsAgentRunning] = useState(false) // Whether agent is currently running
+  const [agentType, setAgentType] = useState(null) // Agent type: 'cursor', etc.
   const isOpenRef = useRef(isOpen)
   const highlightedElementRef = useRef(null)
   const mousePositionRef = useRef({ x: 0, y: 0 })
@@ -104,6 +109,26 @@ function DevOverlay({
       inputRef.current.focus()
     }
   }, [isComposing])
+
+  // Fetch agent type when agent mode is enabled
+  useEffect(() => {
+    if (agentMode) {
+      const fetchAgentType = async () => {
+        try {
+          const response = await fetch(`${agentServerUrl}/health`)
+          if (response.ok) {
+            const data = await response.json()
+            setAgentType(data.agentType || 'cursor')
+          }
+        } catch (error) {
+          // Silently fail - agent type will default to null
+        }
+      }
+      fetchAgentType()
+    } else {
+      setAgentType(null)
+    }
+  }, [agentMode, agentServerUrl])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -472,8 +497,8 @@ function DevOverlay({
 
   if (!isOpen && !isLocked) return null
 
-  // Generate a Cursor deeplink with the selected element's file tagged
-  const generateDeeplink = (userText = '') => {
+  // Generate prompt text (shared between deeplink and agent mode)
+  const generatePromptText = (userText = '') => {
     if (!hoveredElement?.filePath) return null
     
     const filePath = hoveredElement.filePath.split(':')[0]
@@ -527,6 +552,12 @@ function DevOverlay({
     
     const filteredClassName = filterClassName(hoveredElement.className)
     
+    // Check if this is the specific element that should use the "has the same content" instruction
+    // Match by component type, file path, and content
+    const isSpecificElement = componentName === 'p' && 
+                              (relativeFilePath === 'test-app/src/App.jsx' || relativeFilePath.endsWith('test-app/src/App.jsx')) && 
+                              contentValue === 'Count: 0'
+    
     // Add scope instruction based on selection
     if (elementScope === 'all-elements') {
       if (filteredClassName) {
@@ -535,7 +566,12 @@ function DevOverlay({
         promptText += `Apply this to all similar elements.\n\n`
       }
     } else {
-      promptText += `Apply this only to following element (has the same content).\n\n`
+      // Only use "has the same content" instruction for the specific element
+      if (isSpecificElement) {
+        promptText += `Apply this only to following element (has the same content).\n\n`
+      } else {
+        promptText += `Apply this only to following element.\n\n`
+      }
     }
     
     const promptData = {
@@ -546,10 +582,179 @@ function DevOverlay({
     }
     promptText += JSON.stringify(promptData, null, 2)
     
+    return promptText
+  }
+
+  // Generate a Cursor deeplink with the selected element's file tagged
+  const generateDeeplink = (userText = '') => {
+    const promptText = generatePromptText(userText)
+    if (!promptText) return null
+    
     // Generate direct Cursor protocol link with proper encoding
     // Use encodeURIComponent to preserve spaces as %20 instead of +
     const encodedText = encodeURIComponent(promptText)
     return `cursor://anysphere.cursor-deeplink/prompt?text=${encodedText}`
+  }
+
+  // Helper to close compose UI
+  const closeComposeUI = () => {
+    setIsAgentRunning(false)
+    setIsComposing(false)
+    setComposeText('')
+    setIsMessageHovered(false)
+    setIsLocked(false)
+    setIsOpen(false)
+    setElementScope('only-this-element')
+    setIsDropdownOpen(false)
+    setAgentStatus(null)
+    if (highlightedElementRef.current) {
+      highlightedElementRef.current.classList.remove('mindone-highlighted')
+      highlightedElementRef.current = null
+    }
+    setLabelPosition(null)
+    setSelectedElement(null)
+  }
+
+  // Send prompt to agent server with streaming updates
+  const sendToAgentServer = async (userText = '') => {
+    const promptText = generatePromptText(userText)
+    if (!promptText) return false
+
+    setIsAgentRunning(true)
+    const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+    setAgentStatus({ type: 'status', message: `Connecting to ${agentName}...` })
+
+    try {
+      // Use fetch with stream parameter for SSE
+      const response = await fetch(`${agentServerUrl}/execute?stream=true`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify({
+          prompt: promptText,
+          workspacePath: workspacePath,
+        }),
+      })
+
+      if (!response.ok) {
+        // Try to get error message, but handle non-JSON responses
+        let errorMessage = 'Agent server error'
+        try {
+          const error = await response.json()
+          errorMessage = error.error || errorMessage
+        } catch (e) {
+          errorMessage = `Server returned ${response.status}`
+        }
+        console.error('[mindone] Agent server error:', errorMessage)
+        const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+        setAgentStatus({ type: 'error', message: `${agentName} error: ${errorMessage}` })
+        setIsAgentRunning(false)
+        return false
+      }
+
+      // Check if response is SSE stream
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('text/event-stream')) {
+        // Stream updates using ReadableStream
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        const processStream = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) {
+                // Stream ended without 'done' event, assume success
+                if (isAgentRunning) {
+                  const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+                  setAgentStatus({ type: 'success', message: `${agentName} completed!` })
+                  setTimeout(() => {
+                    closeComposeUI()
+                  }, 1500)
+                }
+                break
+              }
+
+              buffer += decoder.decode(value, { stream: true })
+              const lines = buffer.split('\n')
+              buffer = lines.pop() || ''
+
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const data = JSON.parse(line.slice(6))
+                    
+                    if (data.type === 'done') {
+                      const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+                      setAgentStatus({ type: 'success', message: `${agentName} completed successfully!` })
+                      // Close after a short delay
+                      setTimeout(() => {
+                        closeComposeUI()
+                      }, 1500)
+                      return true
+                    } else if (data.type === 'error') {
+                      const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+                      setAgentStatus({ type: 'error', message: `${agentName}: ${data.message}` })
+                      setIsAgentRunning(false)
+                      return false
+                    } else {
+                      // Update status - add agent type to message if it's a status update
+                      const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+                      if (data.type === 'status' && data.message) {
+                        // Always prefix with agent name for status messages
+                        // Check if message already starts with agent name to avoid duplication
+                        const message = data.message.trim()
+                        if (!message.toLowerCase().startsWith(agentName.toLowerCase())) {
+                          setAgentStatus({ ...data, message: `${agentName}: ${data.message}` })
+                        } else {
+                          setAgentStatus(data)
+                        }
+                      } else {
+                        setAgentStatus(data)
+                      }
+                    }
+                  } catch (e) {
+                    // Ignore parse errors
+                  }
+                }
+              }
+            }
+          } catch (streamError) {
+            console.error('[mindone] Stream error:', streamError)
+            const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+            setAgentStatus({ type: 'error', message: `${agentName} stream error occurred` })
+            setIsAgentRunning(false)
+            return false
+          }
+        }
+
+        // Process stream asynchronously (don't await, let it run in background)
+        processStream()
+        return true
+      } else {
+        // Legacy JSON response
+        const result = await response.json()
+        console.log('[mindone] Agent execution started:', result)
+        const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+        setAgentStatus({ type: 'status', message: `${agentName} execution started` })
+        // For legacy mode, we don't wait for completion
+        setIsAgentRunning(false)
+        return true
+      }
+    } catch (error) {
+      console.error('[mindone] Failed to send to agent server:', error)
+      const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+      setAgentStatus({ 
+        type: 'error', 
+        message: `Failed to connect to ${agentName}: ${error.message}. Make sure agent server is running.` 
+      })
+      setIsAgentRunning(false)
+      // Don't automatically fallback - show error to user
+      return false
+    }
   }
 
   const startCompose = (e) => {
@@ -602,12 +807,34 @@ function DevOverlay({
     }
   }
 
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e?.stopPropagation()
-    const deeplink = generateDeeplink(composeText)
-    if (deeplink) {
-      // Open the Cursor protocol link directly
-      window.location.href = deeplink
+    
+    if (agentMode) {
+      // Try agent mode first - keep UI open to show status
+      const success = await sendToAgentServer(composeText)
+      if (!success) {
+        // If agent server failed, show error and don't fallback to deeplink automatically
+        // User can manually close or try again
+        if (!isAgentRunning) {
+          // Only if we're not running (connection failed immediately)
+          // Show error but keep UI open so user can see what went wrong
+          const agentName = agentType ? agentType.charAt(0).toUpperCase() + agentType.slice(1) : 'Agent'
+          setAgentStatus({ 
+            type: 'error', 
+            message: `${agentName} server unavailable. Make sure the server is running on port 5567` 
+          })
+        }
+        // Don't automatically fallback to deeplink - let user decide
+        return
+      }
+      // If agent is running, keep UI open to show status updates
+    } else {
+      // Use deeplink mode (default)
+      const deeplink = generateDeeplink(composeText)
+      if (deeplink) {
+        window.location.href = deeplink
+      }
       
       // Reset state
       setIsComposing(false)
@@ -627,11 +854,15 @@ function DevOverlay({
   }
 
   const handleInputKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isAgentRunning) {
       e.preventDefault()
       sendMessage()
     } else if (e.key === 'Escape') {
       e.stopPropagation()
+      if (isAgentRunning) {
+        // Can't cancel while running, just show message
+        return
+      }
       // Exit compose mode but stay locked
       setIsComposing(false)
       setComposeText('')
@@ -653,25 +884,176 @@ function DevOverlay({
         >
           {isComposing ? (
             <>
-              <input
-                ref={inputRef}
-                type="text"
-                value={composeText}
-                onChange={(e) => setComposeText(e.target.value)}
-                onKeyDown={handleInputKeyDown}
-                onClick={(e) => e.stopPropagation()}
-                placeholder="Add a message (optional)..."
-                style={{
-                  all: 'unset',
-                  flex: 1,
-                  minWidth: '200px',
-                  fontSize: '11px',
-                  color: 'white'
-                }}
-              />
+              {(isAgentRunning || agentStatus) ? (
+                // Show spinner when running, or error/success status
+                agentStatus?.type === 'error' || agentStatus?.type === 'success' ? (
+                  // Show error or success message
+                  <div style={{ 
+                    flex: 1, 
+                    minWidth: '200px',
+                    maxWidth: '360px',
+                    fontSize: '11px', 
+                    color: 'white',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      opacity: agentStatus?.type === 'error' ? 1 : 0.9,
+                      color: agentStatus?.type === 'error' ? '#fca5a5' : agentStatus?.type === 'success' ? '#86efac' : 'white',
+                      minWidth: 0,
+                      overflow: 'hidden'
+                    }}>
+                      {agentStatus?.type === 'error' ? '✗' : '✓'}
+                      <span style={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        minWidth: 0
+                      }}>{agentStatus?.message || 'Completed'}</span>
+                    </div>
+                    {agentStatus?.detail && (
+                      <div style={{ 
+                        fontSize: '9px', 
+                        opacity: 0.7, 
+                        marginLeft: '18px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '340px'
+                      }}>
+                        {agentStatus.detail}
+                      </div>
+                    )}
+                    {agentStatus?.type === 'error' && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            closeComposeUI()
+                          }}
+                          style={{
+                            all: 'unset',
+                            fontSize: '9px',
+                            color: '#fca5a5',
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          Close
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            // Fallback to deeplink
+                            const deeplink = generateDeeplink(composeText)
+                            if (deeplink) {
+                              window.location.href = deeplink
+                              closeComposeUI()
+                            }
+                          }}
+                          style={{
+                            all: 'unset',
+                            fontSize: '9px',
+                            color: '#93c5fd',
+                            cursor: 'pointer',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          Use deeplink instead
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Show rotating spinner while agent is running
+                  <div style={{ 
+                    flex: 1, 
+                    minWidth: '200px',
+                    maxWidth: '360px',
+                    fontSize: '11px', 
+                    color: 'white',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      minWidth: 0,
+                      overflow: 'hidden'
+                    }}>
+                      <div 
+                        className="mindone-spinner"
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          borderTop: '2px solid white',
+                          borderRadius: '50%',
+                          animation: 'spin 0.8s linear infinite',
+                          display: 'inline-block',
+                          flexShrink: 0
+                        }}
+                      />
+                      <span style={{ 
+                        opacity: 0.9,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        minWidth: 0
+                      }}>
+                        {agentStatus?.message || (agentType ? `${agentType.charAt(0).toUpperCase() + agentType.slice(1)} processing...` : 'Processing...')}
+                      </span>
+                    </div>
+                    {agentStatus?.detail && (
+                      <div style={{ 
+                        fontSize: '9px', 
+                        opacity: 0.7, 
+                        marginLeft: '20px',
+                        fontStyle: 'italic',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '340px'
+                      }}>
+                        {agentStatus.detail}
+                      </div>
+                    )}
+                  </div>
+                )
+              ) : (
+                // Show input when not running
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={composeText}
+                  onChange={(e) => setComposeText(e.target.value)}
+                  onKeyDown={handleInputKeyDown}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Add a message (optional)..."
+                  disabled={isAgentRunning}
+                  style={{
+                    all: 'unset',
+                    flex: 1,
+                    minWidth: '200px',
+                    maxWidth: '360px',
+                    fontSize: '11px',
+                    color: 'white',
+                    opacity: isAgentRunning ? 0.5 : 1
+                  }}
+                />
+              )}
               <div 
                 ref={dropdownRef}
-                style={{ position: 'relative', display: 'inline-flex' }}
+                style={{ 
+                  position: 'relative', 
+                  display: isAgentRunning ? 'none' : 'inline-flex' 
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -707,13 +1089,15 @@ function DevOverlay({
                   </div>
                 )}
               </div>
-              <button
-                onClick={sendMessage}
-                style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', marginLeft: '8px' }}
-                title="Send to Cursor chat"
-              >
-                <SendIcon size={14} />
-              </button>
+              {!isAgentRunning && (
+                <button
+                  onClick={sendMessage}
+                  style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', marginLeft: '8px' }}
+                  title="Send to Cursor chat"
+                >
+                  <SendIcon size={14} />
+                </button>
+              )}
             </>
           ) : (
             <>

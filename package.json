@@ -12,8 +12,13 @@
       "require": "./dist/mindone.umd.js"
     }
   },
+  "bin": {
+    "mindone-agent-server": "./bin/cli.js"
+  },
   "files": [
     "dist",
+    "bin",
+    "scripts",
     "src/index.d.ts",
     "README.md",
     "LICENSE"
@@ -21,8 +26,14 @@
   "scripts": {
     "sync-css": "node scripts/sync-css.mjs",
     "prebuild": "npm run sync-css",
-    "build": "vite build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "vite build && npm run build:client",
+    "build:client": "node scripts/build-client.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "agent-server": "node scripts/start-agent-server.js",
+    "agent-server:raw": "node scripts/agent-server.js",
+    "dev:agent": "npm run agent-server &",
+    "setup-check": "node scripts/setup-check.js",
+    "postinstall": "node scripts/setup-check.js || true"
   },
   "keywords": [
     "react",

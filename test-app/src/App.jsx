@@ -22,21 +22,38 @@ function Card({ title, children }) {
 function App() {
   const [count, setCount] = useState(0)
   const [message, setMessage] = useState('Hello from Mindone!')
+  
+  // Agent mode is always enabled in test app
+  const agentMode = true
 
   return (
     <>
-      <DevOverlay />
+      <DevOverlay 
+        agentMode={agentMode}
+        agentServerUrl="http://localhost:5567"
+        workspacePath={import.meta.env.VITE_WORKSPACE_PATH || null}
+      />
       <div className="app">
         <header>
           <h1>Mindone Test App</h1>
           <p>
-            Hold <strong className="holographic">Alt ⌥</strong> to show the dev overlay, then hover over elements!
+            Hold <strong className="alt-key">Alt ⌥</strong> to show the dev overlay, then hover over elements!
           </p>
         </header>
 
         <main>
+          <Card title="Agent Mode">
+            <p style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
+              Cursor Agent mode is enabled. Prompts will be sent to the agent server for automatic execution.
+            </p>
+            <p style={{ fontSize: '11px', marginTop: '4px', opacity: 0.6 }}>
+              Make sure the agent server is running: <code>npm run agent-server</code>
+            </p>
+          </Card>
+
           <Card title="Counter Example">
-            <p>Count: {count}</p>
+            <p style={count === 0 ? { fontSize: '0.875rem' } : {}}>Count: {count}</p>
+            <br />
             <Button onClick={() => setCount(count + 1)}>Increment</Button>
             <Button onClick={() => setCount(0)}>Reset</Button>
           </Card>
@@ -70,7 +87,10 @@ function App() {
         </main>
 
         <footer>
-          <p>Click on any element while holding Alt to open it in your editor!</p>
+          <p>Click on any element while holding Alt to create a prompt!</p>
+          <p style={{ fontSize: '12px', marginTop: '8px', opacity: 0.7 }}>
+            With Cursor Agent mode enabled, prompts will automatically execute via the agent server.
+          </p>
         </footer>
       </div>
     </>
